@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { InfiniteData } from '@tanstack/react-query';
-
+import type { Task } from '@/entities/task/model/types';
 import { useTasks, type TaskPage } from '@/entities/task/api/useTasks';
 import { useTaskActions } from '@/entities/task/api/useTaskActions';
-import type { Task } from '@/entities/task/api/mock';
 
 import styles from './TasksPage.module.scss';
 
@@ -15,43 +14,39 @@ export const TasksPage = () => {
   const navigate = useNavigate();
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const infiniteData = data as InfiniteData<TaskPage> | undefined;
-
-  const allTasks: Task[] = infiniteData?.pages.flatMap(page => page.items) || [];
+  const allTasks: Task[] = [...(infiniteData?.pages.flatMap(page => page.items) || [])].sort(
+    (a, b) => a.id - b.id
+  );
 
   const rowVirtualizer = useVirtualizer({
-  count: allTasks.length,
-  getScrollElement: () => parentRef.current,
-  estimateSize: () => 56,
-  overscan: 5,
-});
+    count: allTasks.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 60,
+    overscan: 5,
+  });
 
-
-  // infinite scroll
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
-    if (!parentRef.current) return;
+
+    const virtualItems = rowVirtualizer.getVirtualItems();
+    const lastItem = virtualItems[virtualItems.length - 1];
+    if (!lastItem) return;
+
+    const el = document.getElementById(`task-${lastItem.index}`);
+    if (!el) return;
 
     const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
-        }
+      ([entry]) => {
+        if (entry.isIntersecting) fetchNextPage();
       },
-      { root: parentRef.current, threshold: 1 }
+      { root: parentRef.current, rootMargin: '200px' }
     );
 
-    const el = loadMoreRef.current;
-    if (el) observer.observe(el);
-
-    return () => {
-      if (el) observer.unobserve(el);
-    };
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rowVirtualizer.getVirtualItems(), hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -64,7 +59,7 @@ export const TasksPage = () => {
   };
 
   const handleEdit = (task: Task) => {
-    update.mutate({ id: task.id, data: { title: task.title + ' (обновлено)' } });
+    update.mutate({ id: task.id, title: task.title + ' (обновлено)' });
   };
 
   const handleDelete = (id: number) => {
@@ -77,7 +72,7 @@ export const TasksPage = () => {
     <div className={styles.page}>
       <h1>Список задач</h1>
 
-      {/* Form */}
+      {/* Форма создания */}
       <div className={styles.form}>
         <input
           placeholder="Название задачи"
@@ -89,19 +84,15 @@ export const TasksPage = () => {
           value={newDescription}
           onChange={e => setNewDescription(e.target.value)}
         />
-        <button
-          onClick={handleCreate}
-          disabled={create.status === 'pending'}
-        >
+        <button onClick={handleCreate} disabled={create.status === 'pending'}>
           {create.status === 'pending' ? 'Создание...' : 'Создать'}
         </button>
       </div>
 
-      {/* List */}
+      {/* Список с виртуализацией */}
       <div ref={parentRef} className={styles.listWrapper}>
         <div
           className={styles.virtualContainer}
-          key={allTasks.length}
           style={{ height: rowVirtualizer.getTotalSize() }}
         >
           {rowVirtualizer.getVirtualItems().map(virtualRow => {
@@ -111,8 +102,15 @@ export const TasksPage = () => {
             return (
               <div
                 key={task.id}
+                id={`task-${virtualRow.index}`}
                 className={styles.row}
-                style={{ transform: `translateY(${virtualRow.start}px)` }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
               >
                 <span>
                   {task.id}. {task.title} — {task.description.slice(0, 50)}...
@@ -136,7 +134,6 @@ export const TasksPage = () => {
               </div>
             );
           })}
-          <div ref={loadMoreRef} style={{ height: 1 }} />
         </div>
       </div>
     </div>

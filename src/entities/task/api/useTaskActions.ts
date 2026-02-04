@@ -1,59 +1,63 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTask, updateTask, deleteTask, type Task } from './mock';
-import type { InfiniteData } from '@tanstack/react-query';
-import type { TaskPage } from './useTasks';
+import { createTask, updateTask, deleteTask } from '@/entities/task/api/taskApi';
+import type { Task } from '@/entities/task/model/types';
 
 export const useTaskActions = () => {
   const queryClient = useQueryClient();
 
-  const create = useMutation<Task, Error, { title: string; description: string }>({
-    mutationFn: ({ title, description }) => createTask(title, description),
+  const create = useMutation({
+    mutationFn: (task: Omit<Task, 'id'>) => createTask(task),
     onSuccess: (newTask) => {
-      queryClient.setQueryData<InfiniteData<TaskPage> | undefined>(['tasks'], old => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page, i) =>
-            i === 0 ? { ...page, items: [newTask, ...page.items] } : page
-          ),
-        };
+      queryClient.setQueryData(['tasks'], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const updatedPages = [...oldData.pages];
+        if (updatedPages.length > 0) {
+          updatedPages[0] = {
+            ...updatedPages[0],
+            items: [newTask, ...updatedPages[0].items],
+          };
+        }
+
+        return { ...oldData, pages: updatedPages };
       });
     },
   });
 
-  const update = useMutation<Task, Error, { id: number; data: Partial<Task> }>({
-    mutationFn: ({ id, data }) => updateTask(id, data),
+  const update = useMutation({
+    mutationFn: (task: Partial<Task> & { id: number }) => updateTask(task),
     onSuccess: (updatedTask) => {
-      queryClient.setQueryData<InfiniteData<TaskPage> | undefined>(['tasks'], old => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            items: page.items.map(task =>
-              task.id === updatedTask.id ? updatedTask : task
-            ),
-          })),
-        };
+      queryClient.setQueryData(['tasks'], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const updatedPages = oldData.pages.map((page: any) => ({
+          ...page,
+          items: page.items.map((t: Task) =>
+            t.id === updatedTask.id ? { ...t, ...updatedTask } : t
+          ),
+        }));
+
+        return { ...oldData, pages: updatedPages };
       });
     },
   });
 
-  const remove = useMutation<boolean, Error, number>({
-    mutationFn: (id) => deleteTask(id),
-    onSuccess: (_result, id) => {
-      queryClient.setQueryData<InfiniteData<TaskPage> | undefined>(['tasks'], old => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map(page => ({
-            ...page,
-            items: page.items.filter(task => task.id !== id),
-          })),
-        };
-      });
-    },
-  });
+  const remove = useMutation({
+  mutationFn: (id: number) => deleteTask(id),
+  onSuccess: (_data, id) => {
+    queryClient.setQueryData(['tasks'], (oldData: any) => {
+      if (!oldData) return oldData;
+
+      const updatedPages = oldData.pages.map((page: any) => ({
+        ...page,
+        items: page.items.filter((t: Task) => t.id !== id),
+      }));
+
+      return { ...oldData, pages: updatedPages };
+    });
+  },
+});
+
 
   return { create, update, remove };
 };

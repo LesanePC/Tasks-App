@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchTasks, type Task } from '@/entities/task/api/mock';
+import { fetchTaskById } from '@/entities/task/api/taskApi';
+import type { Task } from '@/entities/task/model/types';
 import { useEffect, useState } from 'react';
 
 export const TaskDetailPage = () => {
@@ -11,16 +12,14 @@ export const TaskDetailPage = () => {
   useEffect(() => {
     if (!id) return;
 
-    const fetchTask = async () => {
+    const loadTask = async () => {
       setLoading(true);
-      const pageSize = 1000;
-      const allTasks = await fetchTasks(0, pageSize);
-      const foundTask = allTasks.items.find(t => t.id === Number(id));
-      setTask(foundTask || null);
+      const foundTask = await fetchTaskById(Number(id));
+      setTask(foundTask);
       setLoading(false);
     };
 
-    fetchTask();
+    loadTask();
   }, [id]);
 
   if (loading) return <div>Загрузка...</div>;

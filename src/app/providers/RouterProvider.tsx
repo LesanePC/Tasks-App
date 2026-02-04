@@ -1,18 +1,23 @@
-import { createBrowserRouter, RouterProvider as RRRouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { TasksPage } from "@/pages/tasks/TasksPage";
 import { TaskDetailPage } from "@/pages/tasks/TaskDetailPage";
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <TasksPage />,
+    },
+    {
+      path: "/tasks/:id",
+      element: <TaskDetailPage />,
+    },
+  ],
   {
-    path: "/",
-    element: <TasksPage />,
-  },
-  {
-    path: "/tasks/:id",
-    element: <TaskDetailPage />,
-  },
-]);
+    basename: "/Tasks-App/",
+  }
+);
 
 export const AppRouter = () => {
-  return <RRRouterProvider router={router} />;
+  return <RouterProvider router={router} />;
 };

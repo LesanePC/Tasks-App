@@ -1,6 +1,6 @@
 import React from "react";
 import { useTasks } from '../../entities/task/api/useTasks';
-import type { Task } from '../../entities/task/api/mock';
+import type { Task } from '../../entities/task/model/types';
 import type { TaskPage } from '../../entities/task/api/useTasks';
 import type { InfiniteData } from '@tanstack/react-query';
 
