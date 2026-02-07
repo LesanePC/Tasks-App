@@ -1,7 +1,6 @@
 import React from "react";
-import { useTasks } from '../../entities/task/api/useTasks';
 import type { Task } from '../../entities/task/model/types';
-import type { TaskPage } from '../../entities/task/api/useTasks';
+import { useTasks, type TasksPageResponse } from '@/entities/task/api/useTasks';
 import type { InfiniteData } from '@tanstack/react-query';
 
 export const TasksPage: React.FC = () => {
@@ -9,7 +8,7 @@ export const TasksPage: React.FC = () => {
 
   if (isLoading) return <div>Loading tasks...</div>;
 
-  const infiniteData = data as InfiniteData<TaskPage> | undefined;
+  const infiniteData = data as InfiniteData<TasksPageResponse> | undefined;
   const allTasks: Task[] = infiniteData?.pages.flatMap(page => page.items) || [];
 
   return (

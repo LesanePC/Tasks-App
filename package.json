@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-  "start:backend": "json-server --watch backend/db.json --port 3001 --static dist",
-  "start:frontend": "vite",
-  "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-  "build": "vite build",
-  "preview": "vite preview"
+  "dev": "vite",
+  "build": "tsc -b && vite build",
+  "prestart": "npm run build",
+  "start": "json-server --watch backend/db.json --port 3001 --static dist"
 }
 ,
   "dependencies": {

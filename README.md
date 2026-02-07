@@ -76,18 +76,9 @@ src/
 Установка зависимостей:
 
 bash
+
 npm install
-Запуск frontend + backend одной командой:
-
 npm run start
-Backend доступен на http://localhost:3001/api/tasks
-
-Frontend через Vite (обычно http://localhost:5173)
-
-Сборка фронтенда:
-
-npm run build
-npm run preview
 
 ## 📝 Примечания
 В качестве API используется json-server с db.json

@@ -1,19 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { TasksPageResponse } from "./taskApi";
 import { fetchTasks } from "./taskApi";
-
-export type { TasksPageResponse } from './taskApi';
-
-export const useTasks = () =>
-  useInfiniteQuery<
-    TasksPageResponse,
-    Error,
-    TasksPageResponse,
-    readonly string[],
-    number
-  >({
+export const useTasks = () => useInfiniteQuery({
     queryKey: ["tasks"],
     queryFn: ({ pageParam = 1 }) => fetchTasks({ page: pageParam }),
     getNextPageParam: (lastPage) => lastPage.next ?? undefined,
     initialPageParam: 1,
-  });
+});

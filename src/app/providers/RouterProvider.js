@@ -1,18 +1,17 @@
+import { jsx as _jsx } from "react/jsx-runtime";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { TasksPage } from "@/pages/tasks/TasksPage";
 import { TaskDetailPage } from "@/pages/tasks/TaskDetailPage";
-
 const router = createHashRouter([
-  {
-    path: "/",
-    element: <TasksPage />,
-  },
-  {
-    path: "/tasks/:id",
-    element: <TaskDetailPage />,
-  },
+    {
+        path: "/",
+        element: _jsx(TasksPage, {}),
+    },
+    {
+        path: "/tasks/:id",
+        element: _jsx(TaskDetailPage, {}),
+    },
 ]);
-
 export const AppRouter = () => {
-  return <RouterProvider router={router} />;
+    return _jsx(RouterProvider, { router: router });
 };

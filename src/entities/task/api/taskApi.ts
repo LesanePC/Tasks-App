@@ -1,76 +1,53 @@
-import type { Task } from '../model/types';
+import type { Task } from "../model/types";
 
-const API_URL = 'http://localhost:3001/tasks';
-const PAGE_SIZE = 20;
-
-export interface TasksResponse {
+export type TasksPageResponse = {
   items: Task[];
-  nextPage?: number;
-}
+  next: number | null;
+};
 
-export const fetchTasks = async (page: number = 1): Promise<TasksResponse> => {
-  const res = await fetch(`${API_URL}?_page=${page}&_limit=${PAGE_SIZE}`);
-  if (!res.ok) throw new Error('Failed to fetch tasks');
+export const fetchTasks = async ({ page }: { page: number }): Promise<TasksPageResponse> => {
+  const res = await fetch(`http://localhost:3001/tasks?_page=${page}&_per_page=10`);
+  if (!res.ok) throw new Error("Failed to fetch tasks");
 
-  const data: Task[] = await res.json();
-  const total = Number(res.headers.get('X-Total-Count') || 0);
+  const json = await res.json();
 
   return {
-    items: data,
-    nextPage: page * PAGE_SIZE < total ? page + 1 : undefined
+    items: json.data,
+    next: json.next,
   };
 };
 
-
-
-
-
-/**
- * Получение задачи по ID
- */
-export const fetchTaskById = async (id: number): Promise<Task | null> => {
-  const response = await fetch(`${API_URL}/${id}`);
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const data: Task = await response.json();
-  return data;
+// Одна задача по id
+export const fetchTaskById = async (id: string): Promise<Task> => {
+  const res = await fetch(`http://localhost:3001/tasks/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch task");
+  return res.json();
 };
 
-/**
- * Создание задачи
- */
-export const createTask = async (task: Omit<Task, 'id'>): Promise<Task> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+// Создание задачи
+export const createTask = async (task: Omit<Task, "id">): Promise<Task> => {
+  const res = await fetch(`http://localhost:3001/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8" },
     body: JSON.stringify(task),
   });
-
-  if (!response.ok) throw new Error('Failed to create task');
-  return response.json();
+  if (!res.ok) throw new Error("Failed to create task");
+  return res.json();
 };
 
-/**
- * Обновление задачи
- */
-export const updateTask = async (task: Partial<Task> & { id: number }): Promise<Task> => {
-  const response = await fetch(`${API_URL}/${task.id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+// Обновление задачи
+export const updateTask = async (id: string, task: Partial<Task>): Promise<Task> => {
+  const res = await fetch(`http://localhost:3001/tasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(task),
   });
-
-  if (!response.ok) throw new Error('Failed to update task');
-  return response.json();
+  if (!res.ok) throw new Error("Failed to update task");
+  return res.json();
 };
 
-/**
- * Удаление задачи
- */
-export const deleteTask = async (id: number): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-  if (!response.ok) throw new Error('Failed to delete task');
+// Удаление задачи
+export const deleteTask = async (id: string): Promise<void> => {
+  const res = await fetch(`http://localhost:3001/tasks/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete task");
 };

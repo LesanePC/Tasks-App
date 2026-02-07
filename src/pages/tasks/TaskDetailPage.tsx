@@ -14,7 +14,7 @@ export const TaskDetailPage = () => {
 
     const loadTask = async () => {
       setLoading(true);
-      const foundTask = await fetchTaskById(Number(id));
+      const foundTask = await fetchTaskById(id);
       setTask(foundTask);
       setLoading(false);
     };
